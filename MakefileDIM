@@ -1,0 +1,19 @@
+# $Id: Makefile 50 2015-05-05 13:11:30Z angelov $:
+
+CFLAGS = -g -Wall -DOS_LINUX
+
+LDLIBS=-L/home/b/DIM/dim_v20r13/linux/ -ldim -lpthread #need to export LD_LIBRARY_PATH = "Path to dim libs"
+INC=-I/home/b/DIM/dim_v20r13/dim/
+
+CC=g++
+
+dimToSenseBoard: dimToSenseBoard.o crc8.o uart_crc.o uart.o one_if033.o one_if033_dcs.o
+	g++ $(CFLAGS) $(LDLIBS) -o $@ $^
+
+dimToSenseBoard.o: dimToSenseBoard.cpp uart_crc.h uart.h one_if033.h one_if033_dcs.h
+	g++ -g -c -Wall -pedantic $(INC) -o $@ $<
+
+one_if033_dcs.o: one_if033_dcs.cpp one_if033_dcs.h one_if033.h uart_crc.h uart.h
+	g++ -g -Wall -pedantic $< -c -o $@
+
+
