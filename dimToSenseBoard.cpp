@@ -128,19 +128,13 @@ string get_current_time()
 int main(int argc, char** argv)
 {
   //uint8_t  cfg_data[MAX_CFG_DATA], ret;
-
+  uart     *my_uart_pl;
+  uart_crc *my_uart_crc;
   //number of current sense boards:  
-  const uint16_t nif033=1;
-  uart     *my_uart_pl[nif033];
-  uart_crc *my_uart_crc[nif033];
+  const uint16_t nif033=8;
   one_if033_dcs *p_if033[nif033];  
   //uint16_t idx, slv_id, presamples, dac, testpatt, trigg_ena, threshold, i2c_not_init, adc_dis;
-  uint16_t slv_id[nif033];
-  for (uint16_t i=0; i<nif033; i++)
-  {
-    slv_id[i]=7+i; //
-  }
-  uint16_t idx;
+  uint16_t slv_id, idx;
   uint8_t iff033_status[nif033];
   uint8_t iff033_isFull[nif033];
   int32_t iff033_triggTime[nif033];
@@ -157,7 +151,7 @@ int main(int argc, char** argv)
 
   strcpy(dev_id, DEVICE_MASTER); // default
   br = DEF_BRATE;
-  //slv_id = DEF_SLVID;
+  slv_id = DEF_SLVID;
 
 
 
@@ -210,16 +204,14 @@ int main(int argc, char** argv)
   
 
   br_speed = int2speed_t(br);
-
-  for (uint16_t i=0; i<nif033; i++)
-  {
-    my_uart_pl[i] = new uart(dev_id, br_speed, 1);
-    my_uart_crc[i] = new uart_crc(my_uart_pl[i]);
-  }
+  my_uart_pl = new uart(dev_id, br_speed, 1);
+  my_uart_crc = new uart_crc(my_uart_pl);
 
   for(idx=0;idx<nif033;idx++)
   {
-    p_if033[idx] = new one_if033_dcs(0, my_uart_crc[idx], slv_id[idx]); // need for every iff033 an instance of one_if033 with individual slave id
+    // need for every iff033 an instance of one_if033 with individual slave id
+    slv_id=idx;
+    p_if033[idx] = new one_if033_dcs(0, my_uart_crc, slv_id);
   }
   printf("UART %s open at speed %d\n", dev_id, br);
 
@@ -238,8 +230,8 @@ int main(int argc, char** argv)
 	//printf("if033_%d is full. Timestamp: %d \n", idx,iff033_triggTime[idx]);
 	//printf("if033_%d is full. Timestamp: %d \n", idx,get_current_time());
 	st[idx] = get_current_time();
-	cout << "st[idx] = " <<st[idx] <<endl;
-	cout << "idx = " << idx <<endl;
+	cout << st[idx] <<endl;
+	printf("idx == slv_id = %d \n",idx);
 	strcpy(triggerTimeStamp[idx], "Triggered");
 	cout << triggerTimeStamp[idx] <<endl;
     	ds_timeStamp[idx]->updateService();
@@ -248,7 +240,7 @@ int main(int argc, char** argv)
 	p_if033[idx]->send_cmd(CMD_SOFT_RST);
       }
     }
-    sleep(1);
+    sleep(10);
   }
 }
 
