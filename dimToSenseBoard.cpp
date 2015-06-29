@@ -14,12 +14,10 @@
 #include <dis.hxx>
 
 #include <sys/time.h>
-//stty -F /dev/ttyUSB0 115200
+#include <fstream>
+#include "dimToSenseBoard.h"
 
-#include "uart_crc.h"
-#include "uart.h"
-#include "one_if033.h"
-#include "one_if033_dcs.h"
+//stty -F /dev/ttyUSB0 115200
 
 #define DEVICE_MASTER "/dev/ttyUSB0"
 #define DEF_BRATE 2000000
@@ -120,6 +118,24 @@ string get_current_time()
   return prg_id;
 }
 
+int32_t readImemToFile(uint16_t idx)
+{
+  FILE * myFile;
+  myFile = fopen ("readImem.txt","a");
+
+  char sentence [256];
+  //printf ("\n\n idx of current sense board that measured = %i \n\n ",idx);
+  sprintf (sentence, "\n\n idx of current sense board that measured = %d \n\n ", idx);
+  //fgets (sentence,256,stdin);
+  fputs (sentence,myFile);
+
+  p_if033[idx]->get_event(myFile); //read 4k samples
+  
+  // uint32_t one_if033::read_imem_file(FILE *f, uint8_t *prog_data, uint32_t max_length) // what is prog_data`// what is imem? :p
+  //uint32_t read = p_if033[idx]->read_imem_file(stdout, 0,12);
+  //fclose (myFile);
+  return 0; 
+}
 
 
 
@@ -127,26 +143,10 @@ string get_current_time()
 
 int main(int argc, char** argv)
 {
-  //uint8_t  cfg_data[MAX_CFG_DATA], ret;
-  uart     *my_uart_pl;
-  uart_crc *my_uart_crc;
-  //number of current sense boards:  
-  const uint16_t nif033=8;
-  one_if033_dcs *p_if033[nif033];  
-  //uint16_t idx, slv_id, presamples, dac, testpatt, trigg_ena, threshold, i2c_not_init, adc_dis;
-  uint16_t slv_id, idx;
-  uint8_t iff033_status[nif033];
-  uint8_t iff033_isFull[nif033];
-  int32_t iff033_triggTime[nif033];
-  uint32_t *time_1Hz;
-  uint32_t *time_10MHz;
-  //uint32_t br, pings, nbytes, i;
-  uint32_t br;
   speed_t br_speed;
   //FILE *f_out, *f_inp;
   //char out_file[512];
   //char inp_file[512];
-  char dev_id[512];
   //uint32_t ucode = 0;
 
   strcpy(dev_id, DEVICE_MASTER); // default
@@ -217,6 +217,7 @@ int main(int argc, char** argv)
 
   string st[nif033];
 
+
   while(1)
   {
     for(idx=0;idx<nif033;idx++)
@@ -224,6 +225,7 @@ int main(int argc, char** argv)
       iff033_status[idx] = p_if033[idx]->get_status(); //get_status() to update e.g. trigger condition of a if033 board
       iff033_isFull[idx] = p_if033[idx]->last_full();
       //printf("isFull = %d \n", isFull);
+      //fputs("bla \n",stdout);
       if(iff033_isFull[idx] == 1)
       {
 	//iff033_triggTime[idx] = p_if033[idx]->get_timer(time_1Hz,time_10MHz);
@@ -236,13 +238,17 @@ int main(int argc, char** argv)
 	cout << triggerTimeStamp[idx] <<endl;
     	ds_timeStamp[idx]->updateService();
 
+	readImemToFile(idx); //read current and write to file - for testing
 	//reset of trigger needed here.
+
 	p_if033[idx]->send_cmd(CMD_SOFT_RST);
       }
     }
-    sleep(10);
+    sleep(3);
   }
 }
+
+
 
 int32_t read_hex_dec(char *c, uint32_t *res)
 {
