@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>  /* String function definitions */
-#include <unistd.h>  /* UNIX standard function definitions, for close() */
+#include <unistd.h>  /* UNIX standard function definitions, for close() and read() */
 #include <fcntl.h>   /* File control definitions, for open() */
 #include <termios.h> /* POSIX terminal control definitions */
 #include <signal.h>  /* ANSI C signal handling */

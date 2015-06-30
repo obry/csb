@@ -118,22 +118,21 @@ string get_current_time()
   return prg_id;
 }
 
-int32_t readImemToFile(uint16_t idx)
+int32_t readCurrentToFile(uint16_t idx)
 {
   FILE * myFile;
-  myFile = fopen ("readImem.txt","a");
+  myFile = fopen ("readCurrentFile.txt","a");
 
   char sentence [256];
   //printf ("\n\n idx of current sense board that measured = %i \n\n ",idx);
-  sprintf (sentence, "\n\n idx of current sense board that measured = %d \n\n ", idx);
+  sprintf (sentence, "\n\n #-------- idx of current sense board that measured = %d \n\n ", idx);
   //fgets (sentence,256,stdin);
   fputs (sentence,myFile);
-
   p_if033[idx]->get_event(myFile); //read 4k samples
+  //fclose (myFile); // fclose is callede by get_event() already
   
   // uint32_t one_if033::read_imem_file(FILE *f, uint8_t *prog_data, uint32_t max_length) // what is prog_data`// what is imem? :p
   //uint32_t read = p_if033[idx]->read_imem_file(stdout, 0,12);
-  //fclose (myFile);
   return 0; 
 }
 
@@ -238,7 +237,7 @@ int main(int argc, char** argv)
 	cout << triggerTimeStamp[idx] <<endl;
     	ds_timeStamp[idx]->updateService();
 
-	readImemToFile(idx); //read current and write to file - for testing
+	readCurrentToFile(idx); //read current and write to file - for testing
 	//reset of trigger needed here.
 
 	p_if033[idx]->send_cmd(CMD_SOFT_RST);
